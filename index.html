@@ -2,57 +2,741 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArtifactX — Build Once. Package Once. Publish Everywhere.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="ArtifactX is a pure-Rust static binary for packaging, signing, publishing, and serving apt + yum repositories. Build once. Package once. Publish everywhere.">
+<meta name="theme-color" content="#080b10">
+<meta property="og:title" content="ArtifactX - Build Once. Package Once. Publish Everywhere.">
+<meta property="og:description" content="Your own signed apt + yum repository from one static binary. No database, no JVM, no Ruby, no host packaging tools.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://artifactx-rs.github.io/">
+<meta property="og:image" content="https://raw.githubusercontent.com/artifactx-rs/.github/main/profile/logo.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23080b10'/%3E%3Cpath d='M16 20h32v8H16zM16 36h32v8H16zM20 16h8v32h-8zM36 16h8v32h-8z' fill='%2367d9ff'/%3E%3C/svg%3E">
+<title>ArtifactX - Build Once. Package Once. Publish Everywhere.</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font:15px/1.6 -apple-system,BlinkMacSystemFont,sans-serif;background:#0d1117;color:#c9d1d9;max-width:720px;margin:80px auto;padding:0 24px}
-  h1{font-size:2.2em;color:#f0f6fc}
-  h2{margin:48px 0 12px;color:#f0f6fc}
-  .sub{color:#8b949e;font-size:1.05em;margin-bottom:28px}
-  pre{background:#161b22;border-radius:6px;padding:14px 16px;overflow-x:auto;font-size:.87em;white-space:pre-wrap;word-break:break-all}
-  code{font-family:SF Mono,Monaco,Menlo,monospace}
-  .c1{color:#8b949e}.c2{color:#79c0ff}.c3{color:#7ee787}
-  a{color:#58a6ff;text-decoration:none}
-  .links{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
-  .links a{background:#21262d;padding:6px 14px;border-radius:6px;border:1px solid #30363d}
-  .links a:hover{background:#30363d;text-decoration:none}
-  .hl{background:#1a2332;border:1px solid #1f6feb44;border-radius:8px;padding:20px 24px;margin:24px 0}
-  .hl h3{color:#f0f6fc;margin-bottom:8px;font-size:1.1em}
-  .hl p{color:#8b949e;font-size:.93em;margin-bottom:8px}
-  footer{margin-top:60px;padding-top:20px;border-top:1px solid #21262d;color:#484f58;font-size:.82em}
+  :root {
+    color-scheme: dark;
+    --bg: #080b10;
+    --panel: #0e141d;
+    --panel-2: #121a25;
+    --line: #253142;
+    --line-strong: #3c4d62;
+    --text: #edf3fb;
+    --muted: #a7b2c0;
+    --soft: #748294;
+    --cyan: #67d9ff;
+    --green: #80f0b0;
+    --amber: #ffd166;
+    --coral: #ff8a7a;
+    --violet: #b69cff;
+    --shadow: 0 24px 80px rgba(0, 0, 0, .38);
+    --mono: "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font: 16px/1.6 var(--sans);
+    background:
+      linear-gradient(180deg, rgba(103, 217, 255, .07), transparent 560px),
+      radial-gradient(circle at 80% 8%, rgba(255, 209, 102, .08), transparent 340px),
+      var(--bg);
+    color: var(--text);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px);
+    background-size: 100% 4px;
+    opacity: .35;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  code, pre {
+    font-family: var(--mono);
+  }
+
+  .shell {
+    width: min(1160px, calc(100% - 32px));
+    margin: 0 auto;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    border-bottom: 1px solid rgba(124, 145, 170, .18);
+    background: rgba(8, 11, 16, .82);
+    backdrop-filter: blur(18px);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    min-height: 68px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: 700 14px/1 var(--mono);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .brand img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .nav-links a,
+  .button {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(124, 145, 170, .26);
+    border-radius: 8px;
+    padding: 9px 13px;
+    color: var(--muted);
+    font: 700 12px/1 var(--mono);
+    text-transform: uppercase;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+  }
+
+  .nav-links a:hover,
+  .button:hover {
+    transform: translateY(-2px);
+    border-color: rgba(103, 217, 255, .62);
+    background: rgba(103, 217, 255, .08);
+    color: var(--text);
+  }
+
+  .button.primary {
+    color: #051016;
+    border-color: transparent;
+    background: var(--cyan);
+    box-shadow: 0 12px 34px rgba(103, 217, 255, .18);
+  }
+
+  .button.primary:hover {
+    background: #8be4ff;
+    color: #051016;
+  }
+
+  .hero {
+    min-height: calc(100vh - 68px);
+    display: grid;
+    align-items: center;
+    padding: 64px 0 42px;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.03fr) minmax(320px, .97fr);
+    gap: 42px;
+    align-items: center;
+  }
+
+  .hero-grid > *,
+  .split > *,
+  .grid > *,
+  .install > * {
+    min-width: 0;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    color: var(--green);
+    font: 700 12px/1.3 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 34px;
+    height: 1px;
+    background: var(--green);
+  }
+
+  h1 {
+    margin: 0;
+    max-width: 760px;
+    font-size: clamp(3rem, 8vw, 7.3rem);
+    line-height: .9;
+    letter-spacing: 0;
+  }
+
+  .tagline {
+    max-width: 720px;
+    margin: 24px 0 0;
+    color: var(--muted);
+    font-size: clamp(1.12rem, 2vw, 1.45rem);
+    line-height: 1.45;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 32px 0 0;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 36px 0 0;
+  }
+
+  .stat {
+    border-left: 2px solid var(--line-strong);
+    padding: 2px 0 4px 12px;
+  }
+
+  .stat strong {
+    display: block;
+    color: var(--text);
+    font: 800 20px/1.2 var(--mono);
+  }
+
+  .stat span {
+    color: var(--soft);
+    font-size: 13px;
+  }
+
+  .terminal {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(124, 145, 170, .24);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(18, 26, 37, .94), rgba(10, 15, 22, .98));
+    box-shadow: var(--shadow);
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(124, 145, 170, .18);
+    color: var(--soft);
+    font: 700 12px/1 var(--mono);
+  }
+
+  .dots {
+    display: flex;
+    gap: 7px;
+  }
+
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--coral);
+  }
+
+  .dots i:nth-child(2) { background: var(--amber); }
+  .dots i:nth-child(3) { background: var(--green); }
+
+  pre {
+    margin: 0;
+    padding: 24px;
+    overflow-x: auto;
+    color: #dbe8f5;
+    font-size: 14px;
+    line-height: 1.72;
+  }
+
+  .comment { color: #718095; }
+  .cmd { color: var(--cyan); }
+  .ok { color: var(--green); }
+  .warn { color: var(--amber); }
+  .accent { color: var(--coral); }
+
+  main section {
+    padding: 78px 0;
+    border-top: 1px solid rgba(124, 145, 170, .14);
+  }
+
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 26px;
+  }
+
+  h2 {
+    margin: 0;
+    max-width: 760px;
+    font-size: clamp(2rem, 5vw, 4.4rem);
+    line-height: .98;
+    letter-spacing: 0;
+  }
+
+  .section-copy {
+    max-width: 610px;
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 1.04rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .card {
+    min-width: 0;
+    min-height: 190px;
+    padding: 22px;
+    border: 1px solid rgba(124, 145, 170, .22);
+    border-bottom: 3px solid var(--line-strong);
+    border-radius: 8px;
+    background: rgba(14, 20, 29, .72);
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(103, 217, 255, .48);
+    background: rgba(18, 26, 37, .92);
+  }
+
+  .card h3 {
+    margin: 0 0 10px;
+    font-size: 1.08rem;
+  }
+
+  .card p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .card .label {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: var(--amber);
+    font: 800 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(320px, 1.1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .callout {
+    min-width: 0;
+    padding: 28px;
+    border: 1px solid rgba(128, 240, 176, .24);
+    border-radius: 8px;
+    background: rgba(17, 37, 29, .38);
+  }
+
+  .callout h3 {
+    margin: 0 0 12px;
+    font-size: 1.5rem;
+  }
+
+  .callout p {
+    margin: 0 0 18px;
+    color: var(--muted);
+  }
+
+  .table-wrap {
+    min-width: 0;
+    overflow-x: auto;
+    border: 1px solid rgba(124, 145, 170, .22);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+    background: rgba(14, 20, 29, .72);
+  }
+
+  th,
+  td {
+    padding: 15px 18px;
+    border-bottom: 1px solid rgba(124, 145, 170, .16);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--soft);
+    font: 800 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  td:first-child {
+    color: var(--muted);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .install {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .mini {
+    min-width: 0;
+    border: 1px solid rgba(124, 145, 170, .22);
+    border-radius: 8px;
+    background: rgba(14, 20, 29, .72);
+  }
+
+  .mini h3 {
+    margin: 0;
+    padding: 18px 20px 0;
+    font-size: 1rem;
+  }
+
+  .mini pre {
+    padding: 14px 20px 20px;
+    font-size: 13px;
+  }
+
+  footer {
+    padding: 38px 0 58px;
+    border-top: 1px solid rgba(124, 145, 170, .14);
+    color: var(--soft);
+  }
+
+  .footer-grid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font: 700 12px/1 var(--mono);
+    text-transform: uppercase;
+  }
+
+  .footer-links a {
+    color: var(--muted);
+  }
+
+  .footer-links a:hover {
+    color: var(--cyan);
+  }
+
+  @media (max-width: 900px) {
+    .hero-grid,
+    .split {
+      grid-template-columns: 1fr;
+    }
+
+    .hero {
+      min-height: auto;
+    }
+
+    .grid,
+    .install {
+      grid-template-columns: 1fr;
+    }
+
+    .section-head {
+      display: block;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .shell {
+      width: min(100% - 24px, 1160px);
+    }
+
+    .nav {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 14px 0;
+    }
+
+    .nav-links {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .nav-links a {
+      flex: 1 1 auto;
+    }
+
+    .hero {
+      padding-top: 38px;
+    }
+
+    .stats {
+      grid-template-columns: 1fr;
+    }
+
+    pre {
+      padding: 18px;
+      font-size: 12px;
+    }
+
+    main section {
+      padding: 56px 0;
+    }
+  }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ArtifactX",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Linux, macOS",
+  "description": "A pure-Rust static binary for packaging, signing, publishing, and serving apt + yum repositories.",
+  "softwareVersion": "0.1.0",
+  "codeRepository": "https://github.com/artifactx-rs/artifactx",
+  "license": "https://github.com/artifactx-rs/artifactx#license"
+}
+</script>
 </head>
 <body>
-<h1>ArtifactX</h1>
-<p class="sub">One static binary. apt + yum repo management. Pure-Rust packaging. <span style="color:#484f58">v0.1.0</span></p>
+<header>
+  <nav class="shell nav" aria-label="Primary navigation">
+    <a class="brand" href="#top" aria-label="ArtifactX home">
+      <img src="https://raw.githubusercontent.com/artifactx-rs/.github/main/profile/logo.png" alt="">
+      <span>ArtifactX</span>
+    </a>
+    <div class="nav-links">
+      <a href="#install">Install</a>
+      <a href="#commands">Commands</a>
+      <a href="https://github.com/artifactx-rs/artifactx#readme">Docs</a>
+      <a href="https://github.com/artifactx-rs/artifactx">GitHub</a>
+    </div>
+  </nav>
+</header>
 
-<div class="links">
-  <a href="https://github.com/artifactx-rs/artifactx">GitHub</a>
-  <a href="https://github.com/artifactx-rs/artifactx/releases">Download</a>
-  <a href="https://github.com/artifactx-rs/artifactx#readme">Docs</a>
-  <a href="https://github.com/artifactx-rs/artifactx/pkgs/container/arx">Docker</a>
-</div>
+<main id="top">
+  <section class="hero shell" aria-labelledby="hero-title">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Pure Rust package distribution</p>
+        <h1 id="hero-title">Build Once. Package Once. Publish Everywhere.</h1>
+        <p class="tagline">ArtifactX gives you a signed apt + yum repository from one static binary. Package with no host toolchain, publish atomically, roll back safely, and serve packages to real <code>apt-get</code> and <code>dnf</code> clients.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/artifactx-rs/artifactx/releases/tag/v0.1.0">Download v0.1.0</a>
+          <a class="button" href="https://github.com/artifactx-rs/artifactx">View source</a>
+          <a class="button" href="https://github.com/orgs/artifactx-rs/projects/1">Project board</a>
+        </div>
+        <div class="stats" aria-label="Project status">
+          <div class="stat"><strong>1</strong><span>static binary</span></div>
+          <div class="stat"><strong>57</strong><span>tests green</span></div>
+          <div class="stat"><strong>0</strong><span>runtime daemons</span></div>
+        </div>
+      </div>
 
-<div class="hl">
-<h3>Migrate from any existing repo — one command</h3>
-<p>Import packages from Ubuntu, Docker CE, ClickHouse, or your own apt/yum repo. No directory listing needed — parses metadata exactly like apt-get and dnf do.</p>
-<pre><code><span class="c2">arx import</span> https://packages.clickhouse.com/deb --apt --match-name clickhouse
-<span class="c2">arx import</span> http://archive.ubuntu.com/ubuntu --apt --dist focal --limit 20
-<span class="c2">arx publish</span>                     <span class="c1"># one click, done — your own signed repo</span></code></pre>
-</div>
+      <div class="terminal" aria-label="ArtifactX quick start commands">
+        <div class="terminal-bar">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>arx quickstart</span>
+        </div>
+<pre><code><span class="comment"># 1 minute from zero to signed repo</span>
+<span class="cmd">arx init</span> ./repo
+<span class="cmd">arx pack</span> ./Cargo.toml
+<span class="cmd">arx publish</span>
+<span class="cmd">arx serve</span> --root ./repo --addr 0.0.0.0:8080
 
-<pre><code><span class="c1"># 1 minute from zero</span>
-<span class="c2">arx init</span>                         <span class="c1"># create repo + key</span>
-<span class="c2">arx pack</span> ./Cargo.toml            <span class="c1"># build .deb .rpm .apk</span>
-<span class="c2">arx publish</span>                      <span class="c1"># sign + index</span>
-<span class="c2">arx serve</span>                        <span class="c1"># HTTP on :8080</span></code></pre>
+<span class="ok">apt-get</span> install myapp
+<span class="ok">dnf</span> install myapp</code></pre>
+      </div>
+    </div>
+  </section>
 
-<h2>Install</h2>
+  <section class="shell" id="why">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Why ArtifactX</p>
+        <h2>The missing middle between scripts and artifact platforms.</h2>
+        <p class="section-copy">Keep aptly-style safety, nfpm-style packaging, and Cloudsmith-style push workflows without inheriting a database, JVM, Django stack, SaaS bill, or packaging toolchain.</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <span class="label">Package</span>
+        <h3>One manifest to native packages</h3>
+        <p>Build <code>.deb</code>, <code>.rpm</code>, and <code>.apk</code> from Rust code without shelling out to <code>dpkg-deb</code>, <code>rpmbuild</code>, FPM, or nfpm.</p>
+      </article>
+      <article class="card">
+        <span class="label">Publish</span>
+        <h3>Signed metadata, atomic states</h3>
+        <p>Generate Debian <code>Release</code>/<code>InRelease</code> and RPM <code>repodata</code>, sign them, then flip published states atomically.</p>
+      </article>
+      <article class="card">
+        <span class="label">Operate</span>
+        <h3>Rollback, GC, import, serve</h3>
+        <p>Remove bad packages, prune old versions, import existing apt/yum repos, and expose a compatible HTTP server from the same binary.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="shell" id="install">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Install</p>
+        <h2>Start from a binary, container, or source checkout.</h2>
+      </div>
+      <a class="button" href="https://github.com/artifactx-rs/artifactx/releases">All releases</a>
+    </div>
+
+    <div class="install">
+      <div class="mini">
+        <h3>Static binary</h3>
 <pre><code>curl -fsSLO https://github.com/artifactx-rs/artifactx/releases/download/v0.1.0/arx-amd64
-sudo install -m 755 arx-amd64 /usr/local/bin/arx</code></pre>
-<p style="color:#8b949e;font-size:.9em">or <code>docker run ghcr.io/artifactx-rs/arx:v0.1.0 serve</code> · <code>cargo build --release</code></p>
+sudo install -m 755 arx-amd64 /usr/local/bin/arx
+arx --version</code></pre>
+      </div>
+      <div class="mini">
+        <h3>Docker</h3>
+<pre><code>docker run --rm -v $(pwd)/repo:/repo -p 8080:8080 \
+  ghcr.io/artifactx-rs/arx:v0.1.0 serve \
+  --root /repo --addr 0.0.0.0:8080</code></pre>
+      </div>
+      <div class="mini">
+        <h3>Docker Compose</h3>
+<pre><code>services:
+  arx:
+    image: ghcr.io/artifactx-rs/arx:v0.1.0
+    ports: ["8080:8080"]
+    volumes: ["./repo:/repo"]</code></pre>
+      </div>
+      <div class="mini">
+        <h3>Build from source</h3>
+<pre><code>git clone https://github.com/artifactx-rs/artifactx.git
+cd artifactx
+cargo build --release
+./target/release/arx --version</code></pre>
+      </div>
+    </div>
+  </section>
 
-<footer>artifactx-rs · MIT OR Apache-2.0 / GPL-2.0</footer>
+  <section class="shell" id="commands">
+    <div class="split">
+      <div class="callout">
+        <p class="eyebrow">Migrate</p>
+        <h3>Import an existing repo, then publish your own signed copy.</h3>
+        <p>ArtifactX parses metadata the way package managers do, so you can pull from Ubuntu, Docker CE, ClickHouse, or a private apt/yum repository without relying on directory listings.</p>
+<pre><code><span class="cmd">arx import</span> https://packages.clickhouse.com/deb --apt --match-name clickhouse
+<span class="cmd">arx import</span> http://archive.ubuntu.com/ubuntu --apt --dist focal --limit 20
+<span class="cmd">arx publish</span></code></pre>
+      </div>
+
+      <div class="table-wrap" aria-label="ArtifactX command table">
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>arx init</code></td><td>Scaffold a repository and generate a PGP signing key.</td></tr>
+            <tr><td><code>arx pack</code></td><td>Build native packages from a Cargo.toml or manifest.</td></tr>
+            <tr><td><code>arx publish</code></td><td>Sign and index apt/yum metadata with atomic staging.</td></tr>
+            <tr><td><code>arx serve</code></td><td>Run an HTTP server compatible with apt, dnf, REST API clients, and metrics scraping.</td></tr>
+            <tr><td><code>arx push</code></td><td>Upload packages to a remote <code>arx serve</code> with OIDC or static token auth.</td></tr>
+            <tr><td><code>arx rm</code> / <code>gc</code></td><td>Yank packages and prune old versions with EVR-aware retention.</td></tr>
+            <tr><td><code>arx rollback</code></td><td>Flip back to a previous published state.</td></tr>
+            <tr><td><code>arx import</code></td><td>Migrate packages from an existing apt/yum repository.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="shell" id="verified">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Verified</p>
+        <h2>Real package managers, deterministic metadata, minimal operations.</h2>
+        <p class="section-copy">The project reports 57 green tests across four workspace crates, clippy clean, real apt-get install on Debian bookworm-slim, real dnf install on Fedora 44, and reproducible builds with <code>SOURCE_DATE_EPOCH</code>.</p>
+      </div>
+      <a class="button" href="https://github.com/artifactx-rs/artifactx/actions/workflows/ci.yml">CI status</a>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <span class="label">No DB</span>
+        <h3>Backup with tar</h3>
+        <p>The repository layout is just files: config, keys, package pools, and generated apt/yum metadata.</p>
+      </article>
+      <article class="card">
+        <span class="label">Restore</span>
+        <h3>Rebuild metadata on demand</h3>
+        <p>If generated metadata is lost, <code>arx publish</code> rebuilds it from deterministic repository state.</p>
+      </article>
+      <article class="card">
+        <span class="label">Alpha</span>
+        <h3>Open roadmap, visible board</h3>
+        <p>Track the roadmap, ADRs, operations guide, wiki, and project board directly in the ArtifactX org.</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="shell footer-grid">
+    <div>
+      <strong>ArtifactX</strong><br>
+      <span>Open-source, pure-Rust, self-hosted package distribution.</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/artifactx-rs/artifactx/blob/main/ROADMAP.md">Roadmap</a>
+      <a href="https://github.com/artifactx-rs/artifactx/tree/main/docs/adr">ADRs</a>
+      <a href="https://github.com/artifactx-rs/artifactx/blob/main/docs/OPERATIONS.md">Operations</a>
+      <a href="https://github.com/artifactx-rs/artifactx/wiki">Wiki</a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
