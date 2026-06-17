@@ -238,6 +238,23 @@
     box-shadow: 0 24px 90px rgba(0, 0, 0, .36);
   }
 
+  .import-panel {
+    border: 1px solid rgba(125, 240, 173, .32);
+    border-radius: 8px;
+    padding: 28px;
+    background:
+      linear-gradient(145deg, rgba(125, 240, 173, .14), rgba(16, 23, 32, .88) 46%, rgba(103, 217, 255, .08));
+  }
+
+  .import-panel h2 {
+    max-width: 850px;
+  }
+
+  .import-panel .lead {
+    max-width: 780px;
+    font-size: clamp(1.04rem, 1.7vw, 1.24rem);
+  }
+
   .terminal-head {
     display: flex;
     align-items: center;
@@ -304,6 +321,14 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
+  }
+
+  .migration-grid {
+    display: grid;
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+    gap: 14px;
+    align-items: stretch;
+    margin-top: 18px;
   }
 
   .step,
@@ -442,6 +467,7 @@
   @media (max-width: 920px) {
     .hero-grid,
     .section-title,
+    .migration-grid,
     .split {
       grid-template-columns: 1fr;
     }
@@ -489,6 +515,7 @@
       <span>ArtifactX</span>
     </a>
     <div class="nav-links">
+      <a href="#import">Import</a>
       <a href="#flow">Flow</a>
       <a href="#commands">Commands</a>
       <a href="https://github.com/artifactx-rs/artifactx#readme">Docs</a>
@@ -501,9 +528,9 @@
   <section class="hero shell" aria-labelledby="hero-title">
     <div class="hero-grid">
       <div>
-        <p class="eyebrow">One binary. Signed Linux repos.</p>
-        <h1 id="hero-title">Package. Publish. Serve.</h1>
-        <p class="lead">ArtifactX turns built software into native packages, signs apt/yum metadata, and serves a repo that <span class="highlight">apt-get</span> and <span class="highlight">dnf</span> can install from directly.</p>
+        <p class="eyebrow">Seamless repo migration</p>
+        <h1 id="hero-title">Import. Publish. Switch over.</h1>
+        <p class="lead">ArtifactX can pull packages from an existing <span class="highlight">apt</span> or <span class="highlight">yum</span> repository, put them into your own pool, then publish signed metadata your clients can install from directly.</p>
         <div class="actions">
           <a class="button primary" href="https://github.com/artifactx-rs/artifactx/releases/tag/v0.1.0">Download v0.1.0</a>
           <a class="button" href="https://github.com/artifactx-rs/artifactx">Read source</a>
@@ -511,24 +538,58 @@
         <div class="proof" aria-label="Project proof points">
           <span class="pill ok">pure Rust</span>
           <span class="pill">apt + yum</span>
+          <span class="pill hot">import existing repos</span>
           <span class="pill">no database</span>
-          <span class="pill hot">57 tests</span>
         </div>
       </div>
 
-      <div class="terminal" aria-label="ArtifactX quick start">
+      <div class="terminal" aria-label="ArtifactX import migration quick start">
         <div class="terminal-head">
           <span class="dot-row" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span>verified quickstart</span>
+          <span>migration path</span>
         </div>
 <pre><code><span class="comment"># Commands and flags checked against crates/arx/src/cli.rs</span>
 <span class="cmd">arx init</span> ./repo
-<span class="cmd">arx pack</span> ./Cargo.toml --add --root ./repo
-<span class="cmd">arx publish</span> --root ./repo
-<span class="cmd">arx serve</span> --root ./repo --addr 0.0.0.0:8080
 
-<span class="ok">apt-get</span> install myapp
-<span class="ok">dnf</span> install myapp</code></pre>
+<span class="comment"># apt: reads Packages.gz or Packages, then downloads Filename entries</span>
+<span class="cmd">arx import</span> &lt;apt-repo-url&gt; --apt --dist stable --component main --arch amd64 --match-name myapp --root ./repo
+
+<span class="comment"># yum: reads repomd.xml, primary metadata, then downloads RPM hrefs</span>
+<span class="cmd">arx import</span> &lt;yum-repo-url&gt; --yum --component production --limit 50 --root ./repo
+
+<span class="cmd">arx publish</span> --root ./repo
+<span class="cmd">arx serve</span> --root ./repo --addr 0.0.0.0:8080</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="shell" id="import">
+    <div class="import-panel">
+      <p class="eyebrow">The heavy feature</p>
+      <h2>Migrate from an existing repo without rebuilding every package.</h2>
+      <p class="lead">The import code downloads package files from upstream repository metadata into the local ArtifactX pool. That means you can mirror a bounded slice first, publish it, point test clients at ArtifactX, then widen the import when you are ready.</p>
+
+      <div class="migration-grid">
+        <article class="card">
+          <span class="label">apt import</span>
+          <h3>Package metadata first, files second.</h3>
+          <p>For apt, ArtifactX tries <code>Packages.gz</code>, falls back to plain <code>Packages</code>, parses <code>Package</code> and <code>Filename</code>, then downloads matching files into the configured component pool.</p>
+        </article>
+        <article class="card">
+          <span class="label">yum import</span>
+          <h3>Repodata-driven RPM migration.</h3>
+          <p>For yum/dnf, ArtifactX reads <code>repodata/repomd.xml</code>, finds primary metadata, extracts package <code>href</code> entries, then downloads RPMs into the configured repo directory.</p>
+        </article>
+        <article class="card">
+          <span class="label">safe rollout</span>
+          <h3>Filter before you switch traffic.</h3>
+          <p>Use <code>--limit</code> for small trial imports. On apt, add <code>--arch</code> and <code>--match-name</code> to migrate only the architecture or package prefix you need first.</p>
+        </article>
+        <article class="card">
+          <span class="label">same engine</span>
+          <h3>CLI and server API share the path.</h3>
+          <p>The running server exposes <code>POST /api/v1/import</code>, using the same apt/yum import logic behind <code>arx import</code> for remote migration workflows.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -539,7 +600,7 @@
         <p class="eyebrow">The product in four moves</p>
         <h2>A repo pipeline you can read at a glance.</h2>
       </div>
-      <p class="section-copy">No visual logo wall, no platform maze. ArtifactX is a small operational loop: initialize a repo, put packages in it, publish signed metadata, then serve or push.</p>
+      <p class="section-copy">No visual logo wall, no platform maze. ArtifactX is a small operational loop: import or add packages, publish signed metadata, then serve or push.</p>
     </div>
 
     <div class="flow">
@@ -550,8 +611,8 @@
       </article>
       <article class="step">
         <span class="num">02</span>
-        <h3>Package or add</h3>
-        <p><code>arx pack</code> builds packages; <code>arx add</code> imports existing <code>.deb</code>/<code>.rpm</code> files.</p>
+        <h3>Import or add</h3>
+        <p><code>arx import</code> migrates from upstream apt/yum metadata; <code>arx add</code> accepts local <code>.deb</code>/<code>.rpm</code> files.</p>
       </article>
       <article class="step">
         <span class="num">03</span>
@@ -578,14 +639,14 @@
     <div class="masonry">
       <article class="card feature tall">
         <span class="label">Why it exists</span>
-        <h3>The middle between scripts and artifact platforms.</h3>
-        <p>ArtifactX keeps the repo workflow self-hosted and file-based, without asking you to operate a JVM, database, web console, or SaaS account.</p>
+        <h3>Move off a repo manager without a flag day.</h3>
+        <p>Import a small slice from the current apt/yum source, publish your signed copy, test clients against ArtifactX, then expand the migration when the path is proven.</p>
       </article>
 
       <article class="card">
-        <span class="label">Package</span>
-        <h3>Native packages from one tool.</h3>
-        <p><code>arx pack</code> builds <code>.deb</code>, <code>.rpm</code>, and optional <code>.apk</code> output from a manifest or Cargo.toml.</p>
+        <span class="label">Import</span>
+        <h3>Existing repos become your pool.</h3>
+        <p><code>arx import</code> downloads packages listed by upstream apt/yum metadata and skips files that already exist locally.</p>
       </article>
 
       <article class="card">
@@ -601,9 +662,9 @@
       </article>
 
       <article class="card">
-        <span class="label">Migrate</span>
-        <h3>Pull from existing repos.</h3>
-        <p><code>arx import</code> supports apt/yum sources, with filters for architecture, component, package prefix, and limits.</p>
+        <span class="label">Package</span>
+        <h3>Still build new packages.</h3>
+        <p><code>arx pack</code> builds <code>.deb</code>, <code>.rpm</code>, and optional <code>.apk</code> output from a manifest or Cargo.toml.</p>
       </article>
 
       <article class="card">
@@ -644,8 +705,13 @@
           <span class="dot-row" aria-hidden="true"><i></i><i></i><i></i></span>
           <span>verified examples</span>
         </div>
-<pre><code><span class="comment"># Import a bounded apt subset</span>
-<span class="cmd">arx import</span> &lt;apt-repo-url&gt; --apt --dist stable --component main --limit 20 --root ./repo
+<pre><code><span class="comment"># Bounded apt migration</span>
+<span class="cmd">arx import</span> &lt;apt-repo-url&gt; --apt --dist stable --component main --arch amd64 --match-name myapp --limit 20 --root ./repo
+
+<span class="comment"># Bounded yum migration</span>
+<span class="cmd">arx import</span> &lt;yum-repo-url&gt; --yum --component production --limit 20 --root ./repo
+
+<span class="cmd">arx publish</span> --root ./repo
 
 <span class="comment"># Routine maintenance</span>
 <span class="cmd">arx history</span> --root ./repo
