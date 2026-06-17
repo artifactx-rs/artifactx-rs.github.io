@@ -3,53 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArtifactX</title>
+<title>ArtifactX — Build Once. Package Once. Publish Everywhere.</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font:15px/1.6 -apple-system,BlinkMacSystemFont,sans-serif;background:#0d1117;color:#c9d1d9;max-width:680px;margin:80px auto;padding:0 24px}
+  body{font:15px/1.6 -apple-system,BlinkMacSystemFont,sans-serif;background:#0d1117;color:#c9d1d9;max-width:720px;margin:80px auto;padding:0 24px}
   h1{font-size:2.2em;color:#f0f6fc}
-  h2{margin:40px 0 12px;color:#f0f6fc}
+  h2{margin:48px 0 12px;color:#f0f6fc}
   .sub{color:#8b949e;font-size:1.05em;margin-bottom:28px}
   pre{background:#161b22;border-radius:6px;padding:14px 16px;overflow-x:auto;font-size:.87em;white-space:pre-wrap;word-break:break-all}
   code{font-family:SF Mono,Monaco,Menlo,monospace}
-  .c1{color:#8b949e} .c2{color:#79c0ff} .c3{color:#7ee787}
+  .c1{color:#8b949e}.c2{color:#79c0ff}.c3{color:#7ee787}
   a{color:#58a6ff;text-decoration:none}
-  .links{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0}
+  .links{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
   .links a{background:#21262d;padding:6px 14px;border-radius:6px;border:1px solid #30363d}
   .links a:hover{background:#30363d;text-decoration:none}
+  .hl{background:#1a2332;border:1px solid #1f6feb44;border-radius:8px;padding:20px 24px;margin:24px 0}
+  .hl h3{color:#f0f6fc;margin-bottom:8px;font-size:1.1em}
+  .hl p{color:#8b949e;font-size:.93em;margin-bottom:8px}
   footer{margin-top:60px;padding-top:20px;border-top:1px solid #21262d;color:#484f58;font-size:.82em}
 </style>
 </head>
 <body>
 <h1>ArtifactX</h1>
-<p class="sub">Build Once. Package Once. Publish Everywhere. <span style="color:#484f58">v0.1.0</span></p>
+<p class="sub">One static binary. apt + yum repo management. Pure-Rust packaging. <span style="color:#484f58">v0.1.0</span></p>
 
 <div class="links">
-  <a href="https://github.com/artifactx-rs/artifactx">Source</a>
+  <a href="https://github.com/artifactx-rs/artifactx">GitHub</a>
   <a href="https://github.com/artifactx-rs/artifactx/releases">Download</a>
   <a href="https://github.com/artifactx-rs/artifactx#readme">Docs</a>
   <a href="https://github.com/artifactx-rs/artifactx/pkgs/container/arx">Docker</a>
 </div>
 
-<pre><code><span class="c1"># 1 minute from zero to signed repo</span>
+<div class="hl">
+<h3>Migrate from any existing repo — one command</h3>
+<p>Import packages from Ubuntu, Docker CE, ClickHouse, or your own apt/yum repo. No directory listing needed — parses metadata exactly like apt-get and dnf do.</p>
+<pre><code><span class="c2">arx import</span> https://packages.clickhouse.com/deb --apt --match-name clickhouse
+<span class="c2">arx import</span> http://archive.ubuntu.com/ubuntu --apt --dist focal --limit 20
+<span class="c2">arx publish</span>                     <span class="c1"># one click, done — your own signed repo</span></code></pre>
+</div>
+
+<pre><code><span class="c1"># 1 minute from zero</span>
 <span class="c2">arx init</span>                         <span class="c1"># create repo + key</span>
 <span class="c2">arx pack</span> ./Cargo.toml            <span class="c1"># build .deb .rpm .apk</span>
 <span class="c2">arx publish</span>                      <span class="c1"># sign + index</span>
 <span class="c2">arx serve</span>                        <span class="c1"># HTTP on :8080</span></code></pre>
 
-<h2>What</h2>
-<p>One static binary replacing aptly, reprepro, createrepo, and nfpm — apt + yum repo management, pure-Rust packaging, built-in HTTP serving, PGP signing, atomic rollback. No database, no daemon.</p>
-
 <h2>Install</h2>
 <pre><code>curl -fsSLO https://github.com/artifactx-rs/artifactx/releases/download/v0.1.0/arx-amd64
 sudo install -m 755 arx-amd64 /usr/local/bin/arx</code></pre>
-<p style="color:#8b949e;font-size:.9em">Also: <code>cargo build --release</code> · <code>docker run ghcr.io/artifactx-rs/arx:v0.1.0 serve</code></p>
+<p style="color:#8b949e;font-size:.9em">or <code>docker run ghcr.io/artifactx-rs/arx:v0.1.0 serve</code> · <code>cargo build --release</code></p>
 
-<h2>Migrate</h2>
-<p>Pull packages from an existing apt or yum repo:</p>
-<pre><code><span class="c2">arx import</span> https://old-repo.example.com/apt --apt
-<span class="c2">arx publish</span></code></pre>
-
-<footer>artifactx-rs · GPL-2.0 / MIT OR Apache-2.0</footer>
+<footer>artifactx-rs · MIT OR Apache-2.0 / GPL-2.0</footer>
 </body>
 </html>
