@@ -181,8 +181,8 @@
   h1 {
     max-width: 720px;
     margin: 0;
-    font-size: clamp(3rem, 7.6vw, 6.7rem);
-    line-height: .88;
+    font-size: clamp(2.9rem, 6.6vw, 5.9rem);
+    line-height: 1.02;
     letter-spacing: 0;
   }
 
@@ -236,6 +236,48 @@
     border-radius: 8px;
     background: linear-gradient(180deg, rgba(21, 31, 43, .94), rgba(10, 15, 22, .96));
     box-shadow: 0 24px 90px rgba(0, 0, 0, .36);
+  }
+
+  .quickstart {
+    display: grid;
+    gap: 14px;
+  }
+
+  .quick-card {
+    overflow: hidden;
+    border: 1px solid rgba(115, 129, 148, .24);
+    border-radius: 8px;
+    background: rgba(16, 23, 32, .82);
+  }
+
+  .quick-card.featured {
+    border-color: rgba(103, 217, 255, .5);
+    background: linear-gradient(145deg, rgba(103, 217, 255, .14), rgba(16, 23, 32, .88) 46%, rgba(125, 240, 173, .08));
+  }
+
+  .quick-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(115, 129, 148, .16);
+    padding: 12px 14px;
+  }
+
+  .quick-head strong {
+    font: 800 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .quick-head span {
+    color: var(--soft);
+    font: 800 12px/1 var(--mono);
+  }
+
+  .quick-card pre {
+    padding: 16px 18px 18px;
+    font-size: 12px;
   }
 
   .import-panel {
@@ -515,6 +557,7 @@
       <span>ArtifactX</span>
     </a>
     <div class="nav-links">
+      <a href="#quickstart">Quickstart</a>
       <a href="#import">Import</a>
       <a href="#flow">Flow</a>
       <a href="#commands">Commands</a>
@@ -528,11 +571,12 @@
   <section class="hero shell" aria-labelledby="hero-title">
     <div class="hero-grid">
       <div>
-        <p class="eyebrow">Seamless repo migration</p>
-        <h1 id="hero-title">Import. Publish. Switch over.</h1>
-        <p class="lead">ArtifactX can pull packages from an existing <span class="highlight">apt</span> or <span class="highlight">yum</span> repository, put them into your own pool, then publish signed metadata your clients can install from directly.</p>
+        <p class="eyebrow">Quickstart first. Import when ready.</p>
+        <h1 id="hero-title">Import repos in minutes.</h1>
+        <p class="lead">Start with the binary or Docker image, then use <span class="highlight">arx import</span> to pull packages from an existing apt/yum repository into your own signed repo.</p>
         <div class="actions">
           <a class="button primary" href="https://github.com/artifactx-rs/artifactx/releases/tag/v0.1.0">Download v0.1.0</a>
+          <a class="button" href="#quickstart">Quickstart</a>
           <a class="button" href="https://github.com/artifactx-rs/artifactx">Read source</a>
         </div>
         <div class="proof" aria-label="Project proof points">
@@ -543,22 +587,28 @@
         </div>
       </div>
 
-      <div class="terminal" aria-label="ArtifactX import migration quick start">
-        <div class="terminal-head">
-          <span class="dot-row" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span>migration path</span>
-        </div>
-<pre><code><span class="comment"># Commands and flags checked against crates/arx/src/cli.rs</span>
+      <div class="quickstart" id="quickstart" aria-label="ArtifactX quickstart options">
+        <article class="quick-card featured">
+          <div class="quick-head">
+            <strong>Binary quickstart</strong>
+            <span>recommended</span>
+          </div>
+<pre><code><span class="cmd">curl</span> -fsSLO https://github.com/artifactx-rs/artifactx/releases/download/v0.1.0/arx-amd64
+<span class="cmd">sudo install</span> -m 755 arx-amd64 /usr/local/bin/arx
 <span class="cmd">arx init</span> ./repo
-
-<span class="comment"># apt: reads Packages.gz or Packages, then downloads Filename entries</span>
-<span class="cmd">arx import</span> &lt;apt-repo-url&gt; --apt --dist stable --component main --arch amd64 --match-name myapp --root ./repo
-
-<span class="comment"># yum: reads repomd.xml, primary metadata, then downloads RPM hrefs</span>
-<span class="cmd">arx import</span> &lt;yum-repo-url&gt; --yum --component production --limit 50 --root ./repo
-
-<span class="cmd">arx publish</span> --root ./repo
 <span class="cmd">arx serve</span> --root ./repo --addr 0.0.0.0:8080</code></pre>
+        </article>
+
+        <article class="quick-card">
+          <div class="quick-head">
+            <strong>Docker quickstart</strong>
+            <span>zero install</span>
+          </div>
+<pre><code><span class="cmd">mkdir</span> -p repo
+<span class="cmd">docker run</span> --rm -v $(pwd)/repo:/repo -p 8080:8080 \
+  ghcr.io/artifactx-rs/arx:v0.1.0 serve \
+  --root /repo --addr 0.0.0.0:8080</code></pre>
+        </article>
       </div>
     </div>
   </section>
