@@ -332,11 +332,18 @@
 
   pre {
     margin: 0;
-    overflow-x: auto;
+    overflow-x: hidden;
     padding: 22px;
     color: #dce8f6;
     font-size: 13px;
     line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    scrollbar-width: none;
+  }
+
+  pre::-webkit-scrollbar {
+    display: none;
   }
 
   .comment { color: #77869a; }
@@ -434,8 +441,9 @@
     display: block;
     width: 100%;
     max-width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
+    overflow-x: hidden;
+    white-space: normal;
+    overflow-wrap: anywhere;
     min-height: 30px;
     margin-top: 14px;
     border: 1px solid rgba(103, 217, 255, .28);
