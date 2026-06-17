@@ -150,21 +150,23 @@
   }
 
   .hero {
-    min-height: calc(100vh - 68px);
+    min-height: auto;
     display: grid;
     align-items: center;
-    padding: 70px 0 48px;
+    padding: 70px 0 28px;
   }
 
   .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.04fr) minmax(310px, .96fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
-    align-items: center;
+    align-items: start;
   }
 
   .hero-grid > *,
+  .quickstart > *,
   .flow > *,
+  .migration-grid > *,
   .masonry > *,
   .split > * {
     min-width: 0;
@@ -179,7 +181,7 @@
   }
 
   h1 {
-    max-width: 720px;
+    max-width: 880px;
     margin: 0;
     font-size: clamp(2.9rem, 6.6vw, 5.9rem);
     line-height: 1.02;
@@ -187,7 +189,7 @@
   }
 
   .lead {
-    max-width: 660px;
+    max-width: 760px;
     margin: 22px 0 0;
     color: var(--muted);
     font-size: clamp(1.05rem, 2vw, 1.34rem);
@@ -240,6 +242,7 @@
 
   .quickstart {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
   }
 
@@ -278,6 +281,14 @@
   .quick-card pre {
     padding: 16px 18px 18px;
     font-size: 12px;
+  }
+
+  .quick-section {
+    padding-top: 18px;
+  }
+
+  .quick-section .section-title {
+    margin-bottom: 14px;
   }
 
   .import-panel {
@@ -419,6 +430,27 @@
     color: var(--muted);
   }
 
+  .cmd-chip {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    min-height: 30px;
+    margin-top: 14px;
+    border: 1px solid rgba(103, 217, 255, .28);
+    border-radius: 7px;
+    padding: 7px 9px;
+    color: var(--cyan);
+    background: rgba(103, 217, 255, .07);
+    font: 800 12px/1.25 var(--mono);
+    scrollbar-width: none;
+  }
+
+  .cmd-chip::-webkit-scrollbar {
+    display: none;
+  }
+
   .masonry {
     columns: 3 280px;
     column-gap: 14px;
@@ -427,6 +459,7 @@
   .card {
     display: inline-block;
     width: 100%;
+    min-width: 0;
     margin: 0 0 14px;
     break-inside: avoid;
     padding: 21px;
@@ -510,6 +543,7 @@
     .hero-grid,
     .section-title,
     .migration-grid,
+    .quickstart,
     .split {
       grid-template-columns: 1fr;
     }
@@ -559,6 +593,7 @@
     <div class="nav-links">
       <a href="#quickstart">Quickstart</a>
       <a href="#import">Import</a>
+      <a href="#api">API</a>
       <a href="#flow">Flow</a>
       <a href="#commands">Commands</a>
       <a href="https://github.com/artifactx-rs/artifactx#readme">Docs</a>
@@ -586,30 +621,40 @@
           <span class="pill">no database</span>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="quickstart" id="quickstart" aria-label="ArtifactX quickstart options">
-        <article class="quick-card featured">
-          <div class="quick-head">
-            <strong>Binary quickstart</strong>
-            <span>recommended</span>
-          </div>
+  <section class="shell quick-section" id="quickstart">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">Quickstart</p>
+        <h2>Run a repo before you read the docs.</h2>
+      </div>
+      <p class="section-copy">Binary or Docker, same result: a local ArtifactX repo served on port 8080. The long release URL sits in the command block where horizontal scrolling is expected.</p>
+    </div>
+
+    <div class="quickstart" aria-label="ArtifactX quickstart options">
+      <article class="quick-card featured">
+        <div class="quick-head">
+          <strong>Binary quickstart</strong>
+          <span>recommended</span>
+        </div>
 <pre><code><span class="cmd">curl</span> -fsSLO https://github.com/artifactx-rs/artifactx/releases/download/v0.1.0/arx-amd64
 <span class="cmd">sudo install</span> -m 755 arx-amd64 /usr/local/bin/arx
 <span class="cmd">arx init</span> ./repo
 <span class="cmd">arx serve</span> --root ./repo --addr 0.0.0.0:8080</code></pre>
-        </article>
+      </article>
 
-        <article class="quick-card">
-          <div class="quick-head">
-            <strong>Docker quickstart</strong>
-            <span>zero install</span>
-          </div>
+      <article class="quick-card">
+        <div class="quick-head">
+          <strong>Docker quickstart</strong>
+          <span>zero install</span>
+        </div>
 <pre><code><span class="cmd">mkdir</span> -p repo
 <span class="cmd">docker run</span> --rm -v $(pwd)/repo:/repo -p 8080:8080 \
   ghcr.io/artifactx-rs/arx:v0.1.0 serve \
   --root /repo --addr 0.0.0.0:8080</code></pre>
-        </article>
-      </div>
+      </article>
     </div>
   </section>
 
@@ -624,23 +669,84 @@
           <span class="label">apt import</span>
           <h3>Package metadata first, files second.</h3>
           <p>For apt, ArtifactX tries <code>Packages.gz</code>, falls back to plain <code>Packages</code>, parses <code>Package</code> and <code>Filename</code>, then downloads matching files into the configured component pool.</p>
+          <code class="cmd-chip">arx import &lt;apt-repo-url&gt; --apt --dist stable --component main --arch amd64 --match-name myapp --limit 20 --root ./repo</code>
         </article>
         <article class="card">
           <span class="label">yum import</span>
           <h3>Repodata-driven RPM migration.</h3>
           <p>For yum/dnf, ArtifactX reads <code>repodata/repomd.xml</code>, finds primary metadata, extracts package <code>href</code> entries, then downloads RPMs into the configured repo directory.</p>
+          <code class="cmd-chip">arx import &lt;yum-repo-url&gt; --yum --component production --limit 20 --root ./repo</code>
         </article>
         <article class="card">
           <span class="label">safe rollout</span>
           <h3>Filter before you switch traffic.</h3>
           <p>Use <code>--limit</code> for small trial imports. On apt, add <code>--arch</code> and <code>--match-name</code> to migrate only the architecture or package prefix you need first.</p>
+          <code class="cmd-chip">arx import &lt;apt-repo-url&gt; --apt --limit 20 --root ./repo</code>
         </article>
         <article class="card">
           <span class="label">same engine</span>
           <h3>CLI and server API share the path.</h3>
           <p>The running server exposes <code>POST /api/v1/import</code>, using the same apt/yum import logic behind <code>arx import</code> for remote migration workflows.</p>
+          <code class="cmd-chip">POST /api/v1/import?url=&lt;repo-url&gt;&amp;apt=true&amp;limit=20</code>
         </article>
       </div>
+    </div>
+  </section>
+
+  <section class="shell" id="api">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">Developer API</p>
+        <h2>Everything important is scriptable.</h2>
+      </div>
+      <p class="section-copy">The built-in server exposes package, import, publish, rollback, history, promote, gc, health, and metrics endpoints. Writes require bearer auth with <code>ARX_SERVE_TOKEN</code>.</p>
+    </div>
+
+    <div class="migration-grid">
+      <article class="card">
+        <span class="label">health + inventory</span>
+        <h3>Read status and package state.</h3>
+        <p>Use this for dashboards, CI checks, or deployment smoke tests.</p>
+        <code class="cmd-chip">curl -fsSL &lt;server-url&gt;/api/v1/health</code>
+        <code class="cmd-chip">curl -fsSL &lt;server-url&gt;/api/v1/packages</code>
+      </article>
+
+      <article class="card">
+        <span class="label">upload</span>
+        <h3>Push packages over HTTP.</h3>
+        <p><code>POST /api/v1/packages</code> stores a package and republishes through the server path.</p>
+        <code class="cmd-chip">curl -fsSL -X POST -H "Authorization: Bearer $ARX_SERVE_TOKEN" -H "X-Arx-Filename: myapp.deb" --data-binary @myapp.deb &lt;server-url&gt;/api/v1/packages</code>
+      </article>
+
+      <article class="card">
+        <span class="label">remote import</span>
+        <h3>Trigger migration from CI or tooling.</h3>
+        <p><code>POST /api/v1/import</code> uses the same import logic as <code>arx import</code>.</p>
+        <code class="cmd-chip">curl -fsSL -X POST -H "Authorization: Bearer $ARX_SERVE_TOKEN" "&lt;server-url&gt;/api/v1/import?url=&lt;apt-repo-url&gt;&amp;apt=true&amp;dist=stable&amp;component=main&amp;limit=20"</code>
+      </article>
+
+      <article class="card">
+        <span class="label">publish</span>
+        <h3>Regenerate signed metadata remotely.</h3>
+        <p>Call publish after scripted pool changes or import jobs.</p>
+        <code class="cmd-chip">curl -fsSL -X POST -H "Authorization: Bearer $ARX_SERVE_TOKEN" &lt;server-url&gt;/api/v1/publish</code>
+      </article>
+
+      <article class="card">
+        <span class="label">rollback</span>
+        <h3>Inspect and flip retained states.</h3>
+        <p>History is a read endpoint; rollback is a write endpoint.</p>
+        <code class="cmd-chip">curl -fsSL &lt;server-url&gt;/api/v1/history/stable</code>
+        <code class="cmd-chip">curl -fsSL -X POST -H "Authorization: Bearer $ARX_SERVE_TOKEN" &lt;server-url&gt;/api/v1/rollback/stable</code>
+      </article>
+
+      <article class="card">
+        <span class="label">cleanup</span>
+        <h3>Prune and promote from automation.</h3>
+        <p>Use dry runs before destructive cleanup; promote moves packages between components or repos.</p>
+        <code class="cmd-chip">curl -fsSL -X POST -H "Authorization: Bearer $ARX_SERVE_TOKEN" "&lt;server-url&gt;/api/v1/gc?keep=3&amp;dry_run=true"</code>
+        <code class="cmd-chip">curl -fsSL -X POST -H "Authorization: Bearer $ARX_SERVE_TOKEN" "&lt;server-url&gt;/api/v1/promote?name=myapp&amp;from=staging&amp;to=production&amp;apt=true"</code>
+      </article>
     </div>
   </section>
 
@@ -658,21 +764,25 @@
         <span class="num">01</span>
         <h3>Initialize</h3>
         <p><code>arx init</code> creates the repository layout, config, and signing key.</p>
+        <code class="cmd-chip">arx init ./repo</code>
       </article>
       <article class="step">
         <span class="num">02</span>
         <h3>Import or add</h3>
         <p><code>arx import</code> migrates from upstream apt/yum metadata; <code>arx add</code> accepts local <code>.deb</code>/<code>.rpm</code> files.</p>
+        <code class="cmd-chip">arx import &lt;repo-url&gt; --apt --limit 20 --root ./repo</code>
       </article>
       <article class="step">
         <span class="num">03</span>
         <h3>Publish</h3>
         <p><code>arx publish</code> signs and indexes apt/yum metadata with atomic staging.</p>
+        <code class="cmd-chip">arx publish --root ./repo</code>
       </article>
       <article class="step">
         <span class="num">04</span>
         <h3>Operate</h3>
         <p><code>serve</code>, <code>push</code>, <code>rollback</code>, <code>gc</code>, and <code>history</code> keep the repo boring.</p>
+        <code class="cmd-chip">arx serve --root ./repo --addr 0.0.0.0:8080</code>
       </article>
     </div>
   </section>
@@ -691,42 +801,49 @@
         <span class="label">Why it exists</span>
         <h3>Move off a repo manager without a flag day.</h3>
         <p>Import a small slice from the current apt/yum source, publish your signed copy, test clients against ArtifactX, then expand the migration when the path is proven.</p>
+        <code class="cmd-chip">arx import &lt;repo-url&gt; --apt --limit 20 --root ./repo</code>
       </article>
 
       <article class="card">
         <span class="label">Import</span>
         <h3>Existing repos become your pool.</h3>
         <p><code>arx import</code> downloads packages listed by upstream apt/yum metadata and skips files that already exist locally.</p>
+        <code class="cmd-chip">arx import &lt;repo-url&gt; --apt --dist stable --component main --root ./repo</code>
       </article>
 
       <article class="card">
         <span class="label">Sign</span>
         <h3>PGP metadata by default.</h3>
         <p>Generated apt/yum metadata is signed so standard Linux package managers can verify it.</p>
+        <code class="cmd-chip">arx publish</code>
       </article>
 
       <article class="card tall">
         <span class="label">Recover</span>
         <h3>Rollback is a first-class command.</h3>
         <p><code>arx history</code> lists retained states. <code>arx rollback</code> flips back to a previous published state instead of rebuilding a rescue plan under pressure.</p>
+        <code class="cmd-chip">arx rollback stable --root ./repo</code>
       </article>
 
       <article class="card">
         <span class="label">Package</span>
         <h3>Still build new packages.</h3>
         <p><code>arx pack</code> builds <code>.deb</code>, <code>.rpm</code>, and optional <code>.apk</code> output from a manifest or Cargo.toml.</p>
+        <code class="cmd-chip">arx pack ./Cargo.toml --add --root ./repo</code>
       </article>
 
       <article class="card">
         <span class="label">Automate</span>
         <h3>Push to a running server.</h3>
         <p><code>arx push</code> uploads packages to <code>arx serve</code> using token auth or GitHub Actions OIDC.</p>
+        <code class="cmd-chip">arx push ./dist/*.deb --url &lt;server-url&gt;</code>
       </article>
 
       <article class="card">
         <span class="label">Deploy</span>
         <h3>Compose files are generated.</h3>
         <p><code>arx compose</code> is a real CLI command that writes Docker deployment files for a repo root and listen address.</p>
+        <code class="cmd-chip">arx compose --root ./repo --out ./deploy --addr 0.0.0.0:8080</code>
       </article>
     </div>
   </section>
